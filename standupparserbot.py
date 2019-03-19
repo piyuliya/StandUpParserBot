@@ -20,7 +20,7 @@ def main():
     mybot.idle()
 
 def greet_user(bot, update):
-    text = 'вызван /start'
+    text = 'Привет! У нас ты можешь подписаться на обновление афиши StandUp Store Moscow и получать уведомление, как только интересующее тебя мероприятние появится на сайте! \nВыбери вариант для себя: \n обновление афиши; \n выбрать раздел; \n выбрать комика '
     print(text)
     update.message.reply_text(text)
 
