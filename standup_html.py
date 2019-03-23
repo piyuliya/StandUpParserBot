@@ -23,7 +23,7 @@ def get_event(html):
 
 if __name__ == '__main__':
     page = 1
-    while True:
+    while page < 6:
         html = get_html('https://standupstore.ru/page/%s' % page)
         if html:
             get_event(html)
