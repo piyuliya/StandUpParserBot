@@ -21,7 +21,7 @@ def get_event(html):
         print(data_event)
 
 
-if __name__ == '__main__':
+def pages(html):
     page = 1
     while page < 6:
         html = get_html('https://standupstore.ru/page/%s' % page)
@@ -30,3 +30,13 @@ if __name__ == '__main__':
             with open('standup.html', 'w', encoding='utf8') as f:
                 f.write(html)
         page += 1
+
+
+def check_stand_up_site_page():
+    html = get_html('https://standupstore.ru/')
+    if html:
+        pages(html)
+
+
+if __name__ == '__main__':
+    check_stand_up_site_page()
