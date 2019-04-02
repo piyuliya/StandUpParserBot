@@ -14,13 +14,13 @@ locale.setlocale(locale.LC_TIME, "ru_RU")
 basedir = os.path.abspath(os.path.dirname(__file__))
 engine = create_engine('sqlite:///' + os.path.join(basedir, 'event.db'))
 Base = declarative_base(engine)
-
+Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 session = Session()
 
 
 class Events(Base):
-    __tablename__ = 'events'
+    __tablename__ = 'Events'
     id = Column(Integer, primary_key=True)
     data_event = Column(DateTime, nullable=False)
     price_event = Column(String, nullable=True)
@@ -72,8 +72,8 @@ def get_event(html):
         url = event.find(
             'div',
             class_="t778__bgimg t778__bgimg_first_hover t-bgimg js-product-img")['data-original']
+        print(data_event, price_event, availability, url)
         save_events(data_event, price_event, availability, url)
-
 
 
 def pages(html):
