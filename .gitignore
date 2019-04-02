@@ -5,3 +5,4 @@ __pycache__
 .vscode
 *.html
 *.db
+event.db-journal
