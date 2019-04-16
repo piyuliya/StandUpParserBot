@@ -8,3 +8,5 @@ __pycache__
 event.db-journal
 *.json
 *.DS_Store
+venv
+.vscode
