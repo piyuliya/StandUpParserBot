@@ -2,7 +2,7 @@ import logging
 import os
 
 from telegram import ReplyKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, MessageHandler, RegexHandler, ConversationHandler, Filters
+from telegram.ext import Updater, CommandHandler, MessageHandler, RegexHandler, ConversationHandler, Filters # Длина
 
 from handlers import *
 
