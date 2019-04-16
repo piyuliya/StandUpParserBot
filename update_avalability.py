@@ -9,7 +9,7 @@ from sqlalchemy.orm import mapper, sessionmaker
 import requests
 from bs4 import BeautifulSoup
 
-
+# Пустые строки) слишком много)
 from parser import *
 from parser import Events
 
@@ -22,9 +22,17 @@ else:
 basedir = os.path.abspath(os.path.dirname(__file__))
 engine = create_engine('sqlite:///' + os.path.join(basedir, 'event.db'))
 Base = declarative_base(engine)
-Base.metadata.create_all(engine)
+Base.metadata.create_all(engine) # Аналогично файлу update_url
 Session = sessionmaker(bind=engine)
 session = Session()
+
+
+"""
+По сути, большая часть кода в этом скрипте повторяет код update_url 
+А мы следуем методу DRY - Do not repeate yourself
+Поэтому надо сделать так, чтобы код не повторялся
+Ну и исправить комментарии в update_py
+"""
 
 
 def get_html(url):
