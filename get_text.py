@@ -1,6 +1,6 @@
 def detect_text_uri(uri):
 
-    from google.cloud import vision
+    from google.cloud import vision # Куда ты импорт засунула?)))
     client = vision.ImageAnnotatorClient()
     image = vision.types.Image()
     image.source.image_uri = uri
