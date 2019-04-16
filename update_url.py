@@ -8,7 +8,7 @@ from sqlalchemy.orm import mapper, sessionmaker
 
 import requests
 from bs4 import BeautifulSoup
-
+# Много пробелов
 
 from parser import *
 from parser import Events
@@ -22,9 +22,9 @@ else:
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 engine = create_engine('sqlite:///' + os.path.join(basedir, 'event.db'))
-Base = declarative_base(engine)
+Base = declarative_base(engine) # С большой буквы?)
 Base.metadata.create_all(engine)
-Session = sessionmaker(bind=engine)
+Session = sessionmaker(bind=engine) # Я так запутаюсь, где с маленькой буквы сессия, где с большой)
 session = Session()
 
 
@@ -34,38 +34,38 @@ def get_html(url):
         result.raise_for_status()
         return result.text
     except(requests.RequestExeption, ValueError):
-        return False
+        return False # Перехватила ошибку и что?
 
 
 def get_update_url(html):
     soup = BeautifulSoup(html, 'html.parser')
-    all_event = soup.findAll('div', class_="t778__wrapper no-underline")
+    all_event = soup.findAll('div', class_="t778__wrapper no-underline") # Название переменной нужно точней
     for event in all_event:
-        data_event = event.find(
+        data_event = event.find( 
             'div',
-            class_="t778__descr t-descr t-descr_xxs no-underline").text
-        data_event = data_event.replace(',', '').strip()
+            class_="t778__descr t-descr t-descr_xxs no-underline").text #а почему бы сразу не объединить со следующей строкой?
+        data_event = data_event.replace(',', '').strip() # Data или Date?) 
         try:
             data_event = datetime.strptime(data_event, '%d %B %H:%M')
-        except(ValueError):
-            data_event = datetime.now()
+        except(ValueError): # Скобки?
+            data_event = datetime.now() # Почему если нет даты эвента, пишешь  сегодняшнюю?
         price_event = event.find(
             'div',
-            class_="t778__price t778__price-item t-name t-name_xs").text
+            class_="t778__price t778__price-item t-name t-name_xs").text # а почему бы сразу не объединить со следующей строкой?
         price_event = price_event.strip()[:-2]
         availability = event.find(
             'div',
-            class_="t778__imgwrapper").text
+            class_="t778__imgwrapper").text # а почему бы сразу не объединить со следующей строкой?
         availability = availability.strip()
         url = event.find(
             'div',
             class_="t778__bgimg t778__bgimg_first_hover t-bgimg js-product-img")['data-original']
-        print(data_event, price_event, availability, url)
+        print(data_event, price_event, availability, url) # Для логгирования подключи logging, принты в консоль уже не нужны, ты уже умеешь логгировать как профессионал)
         update_url(data_event, price_event, availability, url)
 
 
 def pages(html):
-    page = 1
+    page = 1 # Используй генератор range, а не рукописный цикл.
     while page < 5:
         html = get_html('https://standupstore.ru/page/%s' % page)
         if html:
@@ -76,16 +76,16 @@ def pages(html):
 def check_stand_up_site_page():
     html = get_html('https://standupstore.ru/')
     if html:
-        pages(html)
+        pages(html) # А если нет? Обработку ошибок добавь
 
 
 def update_url(data_event, price_event, availability, url):
-    session.query(Events.availability, Events.data_event).filter(Events.data_event == data_event).filter(Events.availability != 'Нет мест').update({"url":(url)})
+    session.query(Events.availability, Events.data_event).filter(Events.data_event == data_event).filter(Events.availability != 'Нет мест').update({"url":(url)}) # Сликом длинная строка
     for url in session.query(Events.availability, Events.data_event, Events.url):
         comic = detect_text_uri(url)
         session.query(Events.comic).update({"comic":(comic)})
-        session.commit()
-    session.commit()
+        session.commit() # зачем два коммита сессии?
+    session.commit() # А сессию закрывать кто будет?)
 
 if __name__ == '__main__':
     check_stand_up_site_page()
