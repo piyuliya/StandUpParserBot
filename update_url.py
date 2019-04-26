@@ -2,14 +2,10 @@ import os
 from datetime import datetime
 import locale
 import platform
-
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import mapper, sessionmaker
-
 import requests
 from bs4 import BeautifulSoup
-# Много пробелов
-
 from parser import *
 from parser import Events
 from get_text import detect_text_uri
@@ -22,10 +18,10 @@ else:
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 engine = create_engine('sqlite:///' + os.path.join(basedir, 'event.db'))
-Base = declarative_base(engine) # С большой буквы?)
-Base.metadata.create_all(engine)
-Session = sessionmaker(bind=engine) # Я так запутаюсь, где с маленькой буквы сессия, где с большой)
-session = Session()
+base = declarative_base(engine)
+base.metadata.create_all(engine)
+session = sessionmaker(bind=engine)
+session = session()
 
 
 def get_html(url):
@@ -41,27 +37,26 @@ def get_update_url(html):
     soup = BeautifulSoup(html, 'html.parser')
     all_event = soup.findAll('div', class_="t778__wrapper no-underline") # Название переменной нужно точней
     for event in all_event:
-        data_event = event.find( 
+        data_parser = event.find( 
             'div',
-            class_="t778__descr t-descr t-descr_xxs no-underline").text #а почему бы сразу не объединить со следующей строкой?
-        data_event = data_event.replace(',', '').strip() # Data или Date?) 
+            class_="t778__descr t-descr t-descr_xxs no-underline"
+            ).text.replace(',', '').strip()
         try:
-            data_event = datetime.strptime(data_event, '%d %B %H:%M')
+            data_fo_check = datetime.strptime(data_parser, '%d %B %H:%M')
+            if datetime.strftime(data_fo_check, '%B') == 'январь':
+                data_event = datetime.strftime(datetime.now().timedelta(days=50), '%Y') + ' ' + data_parser
+                data_event = datetime.strptime(data_event, '%Y %d %B %H:%M')
+            else:
+                data_event = datetime.strftime(datetime.now(), '%Y') + ' ' + data_parser
+                data_event = datetime.strptime(data_event, '%Y %d %B %H:%M')
         except(ValueError): # Скобки?
             data_event = datetime.now() # Почему если нет даты эвента, пишешь  сегодняшнюю?
-        price_event = event.find(
-            'div',
-            class_="t778__price t778__price-item t-name t-name_xs").text # а почему бы сразу не объединить со следующей строкой?
-        price_event = price_event.strip()[:-2]
-        availability = event.find(
-            'div',
-            class_="t778__imgwrapper").text # а почему бы сразу не объединить со следующей строкой?
-        availability = availability.strip()
         url = event.find(
             'div',
-            class_="t778__bgimg t778__bgimg_first_hover t-bgimg js-product-img")['data-original']
-        print(data_event, price_event, availability, url) # Для логгирования подключи logging, принты в консоль уже не нужны, ты уже умеешь логгировать как профессионал)
-        update_url(data_event, price_event, availability, url)
+            class_="t778__bgimg t778__bgimg_first_hover t-bgimg js-product-img"
+            )['data-original']
+        print(data_event, url) # Для логгирования подключи logging, принты в консоль уже не нужны, ты уже умеешь логгировать как профессионал)
+        update_url(data_event, url)
 
 
 def pages(html):
@@ -73,19 +68,19 @@ def pages(html):
         page += 1
 
 
-def check_stand_up_site_page():
+def check_update_url():
     html = get_html('https://standupstore.ru/')
     if html:
         pages(html) # А если нет? Обработку ошибок добавь
 
 
-def update_url(data_event, price_event, availability, url):
-    session.query(Events.availability, Events.data_event).filter(Events.data_event == data_event).filter(Events.availability != 'Нет мест').update({"url":(url)}) # Сликом длинная строка
-    for url in session.query(Events.availability, Events.data_event, Events.url):
-        comic = detect_text_uri(url)
-        session.query(Events.comic).update({"comic":(comic)})
-        session.commit() # зачем два коммита сессии?
-    session.commit() # А сессию закрывать кто будет?)
+def update_url(data_event, url):
+    session.query(Events.url, Events.data_event).filter(Events.data_event == data_event).update({"url":(url)}) # Сликом длинная строка
+    session.commit()
+ 
+     # А сессию закрывать кто будет?)
+
 
 if __name__ == '__main__':
-    check_stand_up_site_page()
+    check_update_url()
+    #recognize_url()

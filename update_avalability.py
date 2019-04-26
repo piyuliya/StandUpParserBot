@@ -2,16 +2,11 @@ import os
 from datetime import datetime
 import locale
 import platform
-
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import mapper, sessionmaker
-
 import requests
 from bs4 import BeautifulSoup
-
-# Пустые строки) слишком много)
 from parser import *
-from parser import Events
 
 if platform.system() == 'Windows':
     locale.setlocale(locale.LC_ALL, "russian")
@@ -21,10 +16,10 @@ else:
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 engine = create_engine('sqlite:///' + os.path.join(basedir, 'event.db'))
-Base = declarative_base(engine)
-Base.metadata.create_all(engine) # Аналогично файлу update_url
-Session = sessionmaker(bind=engine)
-session = Session()
+base = declarative_base(engine)
+base.metadata.create_all(engine) 
+session = sessionmaker(bind=engine)
+session = session()
 
 
 """
@@ -48,27 +43,26 @@ def get_update_avalability(html):
     soup = BeautifulSoup(html, 'html.parser')
     all_event = soup.findAll('div', class_="t778__wrapper no-underline")
     for event in all_event:
-        data_event = event.find(
+        data_parser = event.find(
             'div',
-            class_="t778__descr t-descr t-descr_xxs no-underline").text
-        data_event = data_event.replace(',', '').strip()
+            class_="t778__descr t-descr t-descr_xxs no-underline"
+            ).text.replace(',', '').strip()
         try:
-            data_event = datetime.strptime(data_event, '%d %B %H:%M')
+            data_fo_check = datetime.strptime(data_parser, '%d %B %H:%M')
+            if datetime.strftime(data_fo_check, '%B') == 'январь':
+                data_event = datetime.strftime(datetime.now().timedelta(days=50), '%Y') + ' ' + data_parser
+                data_event = datetime.strptime(data_event, '%Y %d %B %H:%M')
+            else:
+                data_event = datetime.strftime(datetime.now(), '%Y') + ' ' + data_parser
+                data_event = datetime.strptime(data_event, '%Y %d %B %H:%M')
         except(ValueError):
             data_event = datetime.now()
-        price_event = event.find(
-            'div',
-            class_="t778__price t778__price-item t-name t-name_xs").text
-        price_event = price_event.strip()[:-2]
         availability = event.find(
             'div',
-            class_="t778__imgwrapper").text
-        availability = availability.strip()
-        url = event.find(
-            'div',
-            class_="t778__bgimg t778__bgimg_first_hover t-bgimg js-product-img")['data-original']
-        print(data_event, price_event, availability, url)
-        update_availability(data_event, price_event, availability, url)
+            class_="t778__imgwrapper"
+            ).text.strip()
+        print(data_event, availability)
+        update_availability(data_event, availability)
 
 
 def pages(html):
@@ -80,16 +74,16 @@ def pages(html):
         page += 1
 
 
-def check_stand_up_site_page():
+def check_update_availability():
     html = get_html('https://standupstore.ru/')
     if html:
         pages(html)
 
 
-def update_availability(data_event, price_event, availability, url):
+def update_availability(data_event, availability):
     session.query(Events.availability, Events.data_event).filter(Events.data_event == data_event).update({"availability":(availability)})
     session.commit()
 
 
 if __name__ == '__main__':
-    check_stand_up_site_page()
+    check_update_availability()

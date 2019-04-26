@@ -10,8 +10,8 @@ from sqlalchemy.orm import mapper, sessionmaker
 from get_text import detect_text_uri
 import requests
 from bs4 import BeautifulSoup
-
 from urllib.request import urlretrieve
+from handlers import * 
 
 if platform.system() == 'Windows':
     locale.setlocale(locale.LC_ALL, "russian")
@@ -25,13 +25,13 @@ os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(keydir, 'StandUp-382
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 engine = create_engine('sqlite:///' + os.path.join(basedir, 'event.db'))
-Base = declarative_base(engine)
-Base.metadata.create_all(engine)
-Session = sessionmaker(bind=engine)
-session = Session()
+base = declarative_base(engine)
+base.metadata.create_all(engine)
+session = sessionmaker(bind=engine)
+session = session()
 
 
-class Events(Base):
+class Events(base):
     __tablename__ = 'Events'
     id = Column(Integer, primary_key=True)
     data_event = Column(DateTime, unique=True, nullable=False)
@@ -40,18 +40,17 @@ class Events(Base):
     url = Column(String, nullable=False)
     comic = Column(String, nullable=True)
 
-    def __init__(self, data_event, price_event, availability, url, comic):
+    def __init__(self, data_event, price_event, availability, url):
         self.data_event = data_event
         self.price_event = price_event
         self.availability = availability
         self.url = url
-        self.comic = comic
 
     def __repr__(self):
         return '<Events {} {}>'.format(self.data_event, self.price_event)
 
 
-Base.metadata.create_all(engine)
+base.metadata.create_all(engine)
 
 
 def get_html(url):
@@ -67,28 +66,30 @@ def get_event(html):
     soup = BeautifulSoup(html, 'html.parser')
     all_event = soup.findAll('div', class_="t778__wrapper no-underline")
     for event in all_event:
-        data_event = event.find(
+        data_parser = event.find(
             'div',
-            class_="t778__descr t-descr t-descr_xxs no-underline").text
-        data_event = data_event.replace(',', '').strip()
+            class_="t778__descr t-descr t-descr_xxs no-underline").text.replace(',', '').strip()
         try:
-            data_event = datetime.strptime(data_event, '%d %B %H:%M')
+            data_fo_check = datetime.strptime(data_parser, '%d %B %H:%M')
+            if datetime.strftime(data_fo_check, '%B') == 'январь':
+                data_event = datetime.strftime(datetime.now().timedelta(days=50), '%Y') + ' ' + data_parser
+                data_event = datetime.strptime(data_event, '%Y %d %B %H:%M')
+            else:
+                data_event = datetime.strftime(datetime.now(), '%Y') + ' ' + data_parser
+                data_event = datetime.strptime(data_event, '%Y %d %B %H:%M')
         except(ValueError):
             data_event = datetime.now()
         price_event = event.find(
             'div',
-            class_="t778__price t778__price-item t-name t-name_xs").text
-        price_event = price_event.strip()[:-2]
+            class_="t778__price t778__price-item t-name t-name_xs").text.strip()[:-2]
         availability = event.find(
             'div',
-            class_="t778__imgwrapper").text
-        availability = availability.strip()
+            class_="t778__imgwrapper").text.strip()
         url = event.find(
             'div',
             class_="t778__bgimg t778__bgimg_first_hover t-bgimg js-product-img")['data-original']
-        comic = detect_text_uri(url)
-        print(data_event, price_event, availability, url)
-        save_events(data_event, price_event, availability, url, comic)
+        #print(data_event, price_event, availability, url)
+        save_events(data_event, price_event, availability, url)
 
 
 def pages(html):
@@ -108,19 +109,20 @@ def check_stand_up_site_page():
         pages(html)
 
 
-def save_events(data_event, price_event, availability, url, comic):
-    event_exists = session.query(Events.data_event).filter(Events.data_event == data_event).count()
-    print(event_exists)
+def save_events(data_event, price_event, availability, url):
+    event_exists = session.query(Events.data_event)\
+        .filter(Events.data_event == data_event).count()
+
     if not event_exists:
         new_event = Events(
             data_event=data_event,
             price_event=price_event,
             availability=availability,
             url=url,
-            comic=comic)
+            )
         session.add(new_event)
         session.commit()
-
+        #send_new_event(new_event)
 
 if __name__ == '__main__':
     check_stand_up_site_page()
