@@ -7,11 +7,12 @@ from sqlalchemy import create_engine, Table, Column, Integer, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import mapper, sessionmaker
 
+from bot import send_new_event
 from get_text import detect_text_uri
 import requests
 from bs4 import BeautifulSoup
 from urllib.request import urlretrieve
-from handlers import * 
+
 
 if platform.system() == 'Windows':
     locale.setlocale(locale.LC_ALL, "russian")
@@ -122,7 +123,8 @@ def save_events(data_event, price_event, availability, url):
             )
         session.add(new_event)
         session.commit()
-        #send_new_event(new_event)
+        send_new_event(new_event)
+
 
 if __name__ == '__main__':
     check_stand_up_site_page()

@@ -20,27 +20,31 @@ class User(base):
     def __init__(self, chat_id, subscribe):
         self.chat_id = chat_id
         self.subscribe = subscribe
-      
+
     def __repr__(self):
         return '<User {} {}>'.format(self.chat_id)
+
 
 base.metadata.create_all(engine)
 
 
 def save_user(chat_id):
-    new_chat_id = session.query(User.chat_id).filter(User.chat_id == chat_id).count()
+    new_chat_id = session.query(User.chat_id)\
+        .filter(User.chat_id == chat_id).count()
     if not new_chat_id:
         new_user = User(
             chat_id=chat_id,
             subscribe=True,
             )
-        session.add(new_user)
+        session.add(chat_id)
         session.commit()
     else:
-        session.query(User.chat_id, User.subscribe).filter(User.chat_id == chat_id).update({"subscribe":(True)})
+        session.query(User.chat_id, User.subscribe)\
+            .filter(User.chat_id == chat_id).update({"subscribe": True})
         session.commit()
 
 
 def remove_user(chat_id):
-    session.query(User.chat_id, User.subscribe).filter(User.chat_id == chat_id).update({"subscribe":(False)})
+    session.query(User.chat_id, User.subscribe)\
+        .filter(User.chat_id == chat_id).update({"subscribe": False})
     session.commit()

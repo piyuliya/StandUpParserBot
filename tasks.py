@@ -1,18 +1,23 @@
 from celery import Celery
 from celery.schedules import crontab
-from parser import *
-from update_url import *
-from update_avalability import *
+
+from parser import check_stand_up_site_page
+from update_avalability import check_update_availability
+from update_url import check_update_url
+
 
 celery_app = Celery('tasks', broker='redis://localhost:6379/0')
+
 
 @celery_app.task
 def celery_parser():
     check_stand_up_site_page()
 
+
 @celery_app.task
 def celery_update_ulr():
     check_update_url()
+
 
 @celery_app.task
 def celery_update_avalability():

@@ -2,11 +2,12 @@ import os
 from datetime import datetime
 import locale
 import platform
+from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import mapper, sessionmaker
 import requests
 from bs4 import BeautifulSoup
-from parser import *
+from parser import Events
 
 if platform.system() == 'Windows':
     locale.setlocale(locale.LC_ALL, "russian")
@@ -50,10 +51,14 @@ def get_update_avalability(html):
         try:
             data_fo_check = datetime.strptime(data_parser, '%d %B %H:%M')
             if datetime.strftime(data_fo_check, '%B') == 'январь':
-                data_event = datetime.strftime(datetime.now().timedelta(days=50), '%Y') + ' ' + data_parser
+                data_event = datetime.strftime(
+                    datetime.now().timedelta(days=50), '%Y'
+                    ) + ' ' + data_parser
                 data_event = datetime.strptime(data_event, '%Y %d %B %H:%M')
             else:
-                data_event = datetime.strftime(datetime.now(), '%Y') + ' ' + data_parser
+                data_event = datetime.strftime(
+                    datetime.now(), '%Y'
+                    ) + ' ' + data_parser
                 data_event = datetime.strptime(data_event, '%Y %d %B %H:%M')
         except(ValueError):
             data_event = datetime.now()
@@ -81,7 +86,9 @@ def check_update_availability():
 
 
 def update_availability(data_event, availability):
-    session.query(Events.availability, Events.data_event).filter(Events.data_event == data_event).update({"availability":(availability)})
+    session.query(Events.availability, Events.data_event)\
+        .filter(Events.data_event == data_event)\
+        .update({"availability": availability})
     session.commit()
 
 

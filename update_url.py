@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 import locale
 import platform
+from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import mapper, sessionmaker
 import requests
@@ -49,13 +50,14 @@ def get_update_url(html):
             else:
                 data_event = datetime.strftime(datetime.now(), '%Y') + ' ' + data_parser
                 data_event = datetime.strptime(data_event, '%Y %d %B %H:%M')
-        except(ValueError): # Скобки?
+        except ValueError:
             data_event = datetime.now() # Почему если нет даты эвента, пишешь  сегодняшнюю?
         url = event.find(
             'div',
             class_="t778__bgimg t778__bgimg_first_hover t-bgimg js-product-img"
             )['data-original']
         print(data_event, url) # Для логгирования подключи logging, принты в консоль уже не нужны, ты уже умеешь логгировать как профессионал)
+        
         update_url(data_event, url)
 
 
@@ -75,7 +77,9 @@ def check_update_url():
 
 
 def update_url(data_event, url):
-    session.query(Events.url, Events.data_event).filter(Events.data_event == data_event).update({"url":(url)}) # Сликом длинная строка
+    session.query(Events.url, Events.data_event)\
+        .filter(Events.data_event == data_event)\
+        .update({"url":(url)})
     session.commit()
  
      # А сессию закрывать кто будет?)
