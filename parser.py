@@ -1,28 +1,16 @@
 import os
 from datetime import datetime
 import locale
-import platform
 
 from sqlalchemy import create_engine, Table, Column, Integer, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import mapper, sessionmaker
 
-from bot import send_new_event
-from get_text import detect_text_uri
 import requests
 from bs4 import BeautifulSoup
-from urllib.request import urlretrieve
 
-
-if platform.system() == 'Windows':
-    locale.setlocale(locale.LC_ALL, "russian")
-else:
-    locale.setlocale(locale.LC_TIME, "ru_RU")
-
-
-keydir = os.path.abspath(os.path.dirname(__file__))
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(keydir, 'StandUp-382484bc62e0.json')
-
+# Устанавливаем верную локаль для Linux
+locale.setlocale(locale.LC_ALL, "ru_RU.utf8")
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 engine = create_engine('sqlite:///' + os.path.join(basedir, 'event.db'))
@@ -51,7 +39,10 @@ class Events(base):
         return '<Events {} {}>'.format(self.data_event, self.price_event)
 
 
-base.metadata.create_all(engine)
+def check_stand_up_site_page():
+    html = get_html('https://standupstore.ru/')
+    if html:
+        parse_pages(html)
 
 
 def get_html(url):
@@ -63,6 +54,14 @@ def get_html(url):
         return False
 
 
+def parse_pages(html):
+    for page in range(1, 5):
+        html = get_html(f'https://standupstore.ru/page/{page}')
+        if html:
+            get_event(html)
+        # СДЕЛАТЬ ОБРАБОТКУ ОШИБОК
+
+
 def get_event(html):
     soup = BeautifulSoup(html, 'html.parser')
     all_event = soup.findAll('div', class_="t778__wrapper no-underline")
@@ -70,47 +69,39 @@ def get_event(html):
         data_parser = event.find(
             'div',
             class_="t778__descr t-descr t-descr_xxs no-underline").text.replace(',', '').strip()
-        try:
-            data_fo_check = datetime.strptime(data_parser, '%d %B %H:%M')
-            if datetime.strftime(data_fo_check, '%B') == 'январь':
-                data_event = datetime.strftime(datetime.now().timedelta(days=50), '%Y') + ' ' + data_parser
-                data_event = datetime.strptime(data_event, '%Y %d %B %H:%M')
-            else:
-                data_event = datetime.strftime(datetime.now(), '%Y') + ' ' + data_parser
-                data_event = datetime.strptime(data_event, '%Y %d %B %H:%M')
-        except(ValueError):
-            data_event = datetime.now()
+        data_event = datetime.strftime(datetime.now(), '%Y') + ' ' + data_parser
+        data_event = datetime.strptime(data_event, '%Y %d %B %H:%M')
+
+        # ОБРАБОТЧИК ЯНВАРЯ - ПЛОХОЙ НЕЯСНЫЙ КОД. ПОДУМАЙ, КАК ЕГО УПРОСИТЬ
+        # try:
+        #    check_date = datetime.strptime(data_parser, '%d %B %H:%M')
+        #    if datetime.strftime(check_date, '%B') == '01':
+        #        data_event = datetime.strftime(datetime.now().timedelta(days=50), '%Y') + ' ' + data_parser
+        #        data_event = datetime.strptime(data_event, '%Y %d %B %H:%M')
+        #    else:
+        #        data_event = datetime.strftime(datetime.now(), '%Y') + ' ' + data_parser
+        #        data_event = datetime.strptime(data_event, '%Y %d %B %H:%M')
+        # except(ValueError):
+        #    data_event = datetime.now()
+
         price_event = event.find(
             'div',
             class_="t778__price t778__price-item t-name t-name_xs").text.strip()[:-2]
+
         availability = event.find(
             'div',
             class_="t778__imgwrapper").text.strip()
+
         url = event.find(
             'div',
             class_="t778__bgimg t778__bgimg_first_hover t-bgimg js-product-img")['data-original']
-        #print(data_event, price_event, availability, url)
-        save_events(data_event, price_event, availability, url)
+
+        save_event(data_event, price_event, availability, url)
+        update_availability(data_event, availability)
+        update_url(data_event, url)
 
 
-def pages(html):
-    page = 1
-    while page < 5:
-        html = get_html('https://standupstore.ru/page/%s' % page)
-        if html:
-            get_event(html)
-            with open('standup.html', 'w', encoding='utf8') as f:
-                f.write(html)
-        page += 1
-
-
-def check_stand_up_site_page():
-    html = get_html('https://standupstore.ru/')
-    if html:
-        pages(html)
-
-
-def save_events(data_event, price_event, availability, url):
+def save_event(data_event, price_event, availability, url):
     event_exists = session.query(Events.data_event)\
         .filter(Events.data_event == data_event).count()
 
@@ -123,8 +114,23 @@ def save_events(data_event, price_event, availability, url):
             )
         session.add(new_event)
         session.commit()
-        send_new_event(new_event)
 
+
+def update_availability(data_event, availability):
+    session.query(Events.availability, Events.data_event)\
+        .filter(Events.data_event == data_event)\
+        .update({"availability": availability})
+    session.commit()
+
+
+def update_url(data_event, url):
+    session.query(Events.url, Events.data_event)\
+        .filter(Events.data_event == data_event)\
+        .update({"url":(url)})
+    session.commit()
+
+
+session.close()
 
 if __name__ == '__main__':
     check_stand_up_site_page()
