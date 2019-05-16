@@ -1,5 +1,6 @@
 from google.cloud import vision 
 
+
 def detect_text_uri(uri):
     client = vision.ImageAnnotatorClient()
     image = vision.types.Image()
@@ -10,5 +11,4 @@ def detect_text_uri(uri):
 
     for text in texts:
         name_comic = text.description
-        print(name_comic)
         return name_comic

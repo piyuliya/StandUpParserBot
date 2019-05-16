@@ -13,14 +13,9 @@ from telegram.ext import Updater, CommandHandler, MessageHandler,\
 import settings
 from utils import get_keyboard
 
-# Импорт алхимии
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
+from db import Events, User, session
 
-from user_status import User, save_user, remove_user
-
-from parser import Events
+from user_status import save_user, remove_user
 
 logging.basicConfig(format='%(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO,
@@ -28,15 +23,7 @@ logging.basicConfig(format='%(name)s - %(levelname)s - %(message)s',
                     )
 
 # Устанавливаем верную локаль для Linux
-locale.setlocale(locale.LC_ALL, "ru_RU.utf8")
-
-# Подключаемся к базе данных
-basedir = os.path.abspath(os.path.dirname(__file__))
-engine = create_engine('sqlite:///' + os.path.join(basedir, 'event.db'))
-base = declarative_base(engine)  # TODO разобраться с подключением?
-base.metadata.create_all(engine)
-session = sessionmaker(bind=engine)
-session = session()
+locale.setlocale(locale.LC_ALL, "ru_RU.UTF-8")
 
 
 def main():
@@ -53,10 +40,15 @@ def main():
 
 def greet_user(bot, update):
     initial_message = """
-            Привет!\nУ нас ты можешь подписаться на обновление афиши
-            StandUp Store Moscow и получать уведомление,
-            как только интересующее тебя мероприятние появится на сайте!\n
-        """
+Привет!\nУ нас ты можешь подписаться на обновление афиши \
+StandUp Store Moscow и получать уведомление, \
+как только интересующее тебя мероприятние появится на сайте!
+"""
+
+    my_keyboard = ReplyKeyboardMarkup([
+        ['Посмотреть афишу', 'Подписаться на обновления', 'Отписаться']
+        ], resize_keyboard=True
+        )
     update.message.reply_text(initial_message, reply_markup=get_keyboard())
 
 
@@ -109,7 +101,7 @@ def send_new_event(new_event):
 
 def send_message_to_user(bot, update, new_event):
     for chat_id in session.query(User.chat_id, User.subscribe)\
-        .filter(User.chat_id == chat_id).filter(User.subscribe == True): 
+     .filter(User.chat_id == chat_id).filter(User.subscribe == True):
         data_event = new_event.data_event.strftime('%d %B %H:%M')
         print(new_event.data_event)
         user_text = 'Новое мероприятие {} цена: {}'\
