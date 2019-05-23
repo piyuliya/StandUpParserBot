@@ -1,8 +1,8 @@
 import os
 
-from sqlalchemy import create_engine, Table, Column, Integer, String, DateTime
+from sqlalchemy import create_engine, Column, Integer, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import mapper, sessionmaker
+from sqlalchemy.orm import sessionmaker
 
 # Подключаемся к базе данных
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -20,12 +20,14 @@ class Events(base):
     availability = Column(String, nullable=True)
     url = Column(String, nullable=False)
     comic = Column(String, nullable=True)
+    status = Column(String, nullable=True)
 
-    def __init__(self, data_event, price_event, availability, url):
+    def __init__(self, data_event, price_event, availability, url, status):
         self.data_event = data_event
         self.price_event = price_event
         self.availability = availability
         self.url = url
+        self.status = status
 
     def __repr__(self):
         return '<Events {} {}>'.format(self.data_event, self.price_event)

@@ -9,7 +9,7 @@ def save_user(chat_id):
             chat_id=chat_id,
             subscribe=True,
             )
-        session.add(chat_id)
+        session.add(new_user)
         session.commit()
     else:
         session.query(User.chat_id, User.subscribe)\

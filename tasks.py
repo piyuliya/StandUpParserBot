@@ -13,4 +13,4 @@ def celery_parser():
 
 @celery_app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
-    sender.add_periodic_task(crontab(minute='*/3'), celery_parser.s())
+    sender.add_periodic_task(crontab(minute='*/2'), celery_parser.s())
