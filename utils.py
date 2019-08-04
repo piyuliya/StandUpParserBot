@@ -2,7 +2,7 @@ from telegram import ReplyKeyboardMarkup
 
 
 def get_keyboard():
-    my_keyboard = ReplyKeyboardMarkup([ # Обрати внимание на PEP8, квадратные скобки можно расположить поудачней)
+    my_keyboard = ReplyKeyboardMarkup([
         ['Посмотреть афишу', 'Подписаться на обновления', 'Отписаться']
         ], resize_keyboard=True
         )

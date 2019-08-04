@@ -81,11 +81,14 @@ def get_schedule(bot, update):
 
 @mq.queuedmessage
 def chek_new_event(bot, job):
+    now_time = datetime.now()
     for data_event, price_event, url, status in session.query(
         Events.data_event,
         Events.price_event,
         Events.url,
         Events.status)\
+            .filter(Events.data_event >= now_time)\
+            .filter(Events.availability != 'Нет мест')\
             .filter(Events.status == True):
         data_event = data_event.strftime('%d %B %H:%M')
         message_text = f"""
