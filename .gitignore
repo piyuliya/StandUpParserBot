@@ -10,4 +10,5 @@ event.db-journal
 *.DS_Store
 venv
 .vscode
-.rdb
+*.rdb
+*.plist

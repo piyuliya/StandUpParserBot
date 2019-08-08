@@ -36,7 +36,7 @@ def main():
     dp.add_handler(RegexHandler('^(Посмотреть афишу)$', get_schedule))
     dp.add_handler(RegexHandler('^(Подписаться на обновления)$', subscribe))
     dp.add_handler(RegexHandler('^(Отписаться)$', unsubscribe))
-    mybot.job_queue.run_repeating(chek_new_event, interval=120)
+    mybot.job_queue.run_repeating(chek_new_event, interval=60)
 
     mybot.start_polling()
     mybot.idle()
