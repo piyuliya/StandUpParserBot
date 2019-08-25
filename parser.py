@@ -27,7 +27,7 @@ def get_html(url):
 
 
 def parse_pages(html):
-    for page in range(1, 5):
+    for page in range(1, 7):
         html = get_html(f'https://standupstore.ru/page/{page}')
         if html:
             get_event(html)
