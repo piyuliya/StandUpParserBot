@@ -103,7 +103,7 @@ def chek_new_event(bot, job):
                 chat_id=chat_id.chat_id,
                 photo=url,
                 caption=message_text,
-                parse_mode='Markdown'
+                parse_mode='Markdown',
                 )
         change_status(data_event)
 

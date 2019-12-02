@@ -1,11 +1,18 @@
 from datetime import datetime
 import locale
+import logging
 
 from db import Events, session
 from get_text import detect_text_uri
 
 import requests
 from bs4 import BeautifulSoup
+
+
+logging.basicConfig(format='%(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO,
+                    filename='bot.log'
+                    )
 
 # Устанавливаем верную локаль для Linux
 locale.setlocale(locale.LC_ALL, "ru_RU.UTF-8")
@@ -28,10 +35,12 @@ def get_html(url):
 
 def parse_pages(html):
     for page in range(1, 7):
-        html = get_html(f'https://standupstore.ru/page/{page}')
-        if html:
-            get_event(html)
-        # СДЕЛАТЬ ОБРАБОТКУ ОШИБОК
+        try:
+            html = get_html(f'https://standupstore.ru/page/{page}')
+            if html:
+                get_event(html)
+        except Exception:
+            logging.info('Error URL')
 
 
 def get_event(html):

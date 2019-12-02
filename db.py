@@ -7,9 +7,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 # Подключаемся к базе данных
 basedir = os.path.abspath(os.path.dirname(__file__))
 engine = create_engine('sqlite:///' + os.path.join(basedir, 'event.db'))
-base = declarative_base(engine)  # TODO разобраться с подключением?
-#session = sessionmaker(bind=engine)
-#session = session()
+base = declarative_base(engine)  # TODO разобраться с подключением
 session_factory = sessionmaker(bind=engine)
 session = scoped_session(session_factory)
 
