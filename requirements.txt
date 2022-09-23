@@ -19,7 +19,7 @@ grpcio==1.19.0
 idna==2.8
 kombu==4.5.0
 mccabe==0.6.1
-protobuf==3.7.1
+protobuf==3.18.3
 pyasn1==0.4.5
 pyasn1-modules==0.2.4
 pycodestyle==2.5.0
